@@ -43,6 +43,7 @@ public abstract class AbstractEventBus implements EventBus {
   public AbstractEventBus() {
     registryMap = new ConcurrentHashMap<>();
     interceptors = new ArrayList<>();
+    addMessageInterceptor(new DefaultMessageInterceptor());
   }
   
   @Override
@@ -95,11 +96,9 @@ public abstract class AbstractEventBus implements EventBus {
         try {
             registry.handle(message);
           } catch (Exception e) {
-            
-//            logger.error("dispatch message fail, cause by:", e);
-            
             interceptors.stream().forEach(interceptor -> interceptor.onError(message, e));
           }
+        
         interceptors.stream().forEach(interceptor -> interceptor.onSuccess(message));
       }
   }

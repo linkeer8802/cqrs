@@ -1,0 +1,81 @@
+/** 
+ *  Copyright (c) 2017 The original author or authors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package org.cqrs.example.handler;
+
+import org.cqrs.core.DomainContext;
+import org.cqrs.core.DomainHandler;
+import org.cqrs.example.domain.TransactionState;
+import org.cqrs.example.domain.TransferTransaction;
+import org.cqrs.example.event.AccountDepositedEvent;
+import org.cqrs.example.event.AccountWithdrawedEvent;
+import org.cqrs.example.event.TransactionStartedEvent;
+import org.cqrs.example.handler.BankAccountHandler.BankAccountCmd;
+
+import com.google.common.collect.ImmutableMap;
+
+/**
+ * @author weird
+ */
+public class TransferTransactionHandler extends DomainHandler<TransferTransaction>{
+
+  public static enum TransferTransactionCmd {
+    BEGIN_START_TRANSFER,
+    TRANSFER_OUT_FROM_SOURCE
+  }
+  
+  public TransferTransactionHandler(Class<TransferTransaction> domainType) {
+    super(domainType);
+  }
+
+  @Override
+  public void handle(DomainContext<TransferTransaction> domainContext) {
+    domainContext.onCmd(TransferTransactionCmd.BEGIN_START_TRANSFER, (context, transferTransaction) -> {
+      String id = context.uniqueId();
+      context.publishEvent(transferTransaction, 
+          new TransactionStartedEvent(
+          id, 
+          context.strArg("sourceId"), 
+          context.strArg("targetId"), 
+          context.doubleArg("amount"), 
+          context.dateArg("transferDateTime")));
+      
+      return id;
+      
+    }).onEvent(TransactionStartedEvent.class, (context, event) -> {
+      
+      System.out.println("Start transfer money from sourceId " + event.sourceId 
+          + " to targetId " + event.targetId + " with amount " + event.amount);
+      
+    }).onSagaStart(TransactionStartedEvent.class, (context, event) -> {
+      context.associateWith("sourceId", event.sourceId);
+      context.associateWith("targetId", event.targetId);
+      
+      return new TransferTransaction(event.aggregateRootId, event.sourceId, 
+          event.targetId, event.amount, event.transferDateTime, TransactionState.INIT);
+      
+    }, (context, event) -> {
+      context.send(BankAccountCmd.WITHDRAWAL_MONEY,
+          ImmutableMap.of("id", event.sourceId, "amount", event.amount));
+      
+    }).onSaga(AccountWithdrawedEvent.class, "sourceId", (context, event) -> {
+      context.send(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", 
+          (String)context.associationProperty("targetId"), "amount", event.amount)); 
+      
+    }).onSaga(AccountDepositedEvent.class, "targetId", (context, event) -> {
+      context.end();
+    });
+  }
+}
