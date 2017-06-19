@@ -39,7 +39,7 @@ public class DefaultMessageInterceptor implements MessageInterceptor {
 
   @Override
   public void onError(Message<?> message, Throwable cause) {
-    throw new RuntimeException("Message handle  error.", cause);
+    throw new RuntimeException("Exception handle message, address=" + message.getAddress(), cause);
   }
 
 }

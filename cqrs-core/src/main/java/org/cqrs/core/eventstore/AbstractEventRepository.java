@@ -62,7 +62,7 @@ public abstract class AbstractEventRepository implements EventRepository{
     Long lastVersion = journalsStorage.getLastVersion(aggregateId);
     if (lastVersion != null && lastVersion < events.lastKey()) {
       
-      logger.debug("publish unsubmit event from version {} to {}", lastVersion, events.lastKey());
+      logger.debug("Publish unsubmit event from version {} to {}", lastVersion, events.lastKey());
       
       for (Entry<Long, DomainEvent> entity : events.tailMap(lastVersion, false).entrySet()) {
         CQRS.get().publishEvent(entity.getValue().getClass().getName(), entity.getValue());

@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.IgnoreExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 
 /**
@@ -58,6 +59,7 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
   public void start() {
     disruptor = new Disruptor<>(DisruptorEvent::new, bufferSize, executor);
     disruptor.handleEventsWith(new DisruptorEventhandler(this));
+    disruptor.setDefaultExceptionHandler(new IgnoreExceptionHandler());
     disruptor.start();
   }
   
