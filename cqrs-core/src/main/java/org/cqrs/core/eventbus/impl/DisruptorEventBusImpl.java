@@ -77,7 +77,7 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
   
   public <T> T execute(String address, Object message) {
     try {
-      return execute(address, message, null);
+      return execute(address, message, 5L);
     } catch (TimeoutException e) {
       throw new IllegalArgumentException(e);
     }
@@ -90,11 +90,9 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
     
     CompletableFuture<T> future = new CompletableFuture<T>();
     
-    subscribe(address + ReplyableMessage.HEADER_MESSAGE_RSP, (replyMessage) -> {
+    subscribeOnce(address + ReplyableMessage.HEADER_MESSAGE_RSP, (replyMessage) -> {
       
       future.complete((T) replyMessage.getBody());
-      
-      unsubscribe(address + ReplyableMessage.HEADER_MESSAGE_RSP);
     });
     
     delivery(address, new ReplyableMessage(this, message.getClass(), message, true).addHeader(Message.HEADER_MESSAGE_ADDR, address));

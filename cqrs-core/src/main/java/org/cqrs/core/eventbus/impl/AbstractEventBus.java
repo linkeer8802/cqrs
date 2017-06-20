@@ -73,11 +73,9 @@ public abstract class AbstractEventBus implements EventBus {
   @Override
   public void send(String address, Object message, MessageHandler<?> replyhandler) {
     
-    subscribe(address + ReplyableMessage.HEADER_MESSAGE_RSP, (replyMessage) -> {
+    subscribeOnce(address + ReplyableMessage.HEADER_MESSAGE_RSP, (replyMessage) -> {
       
       replyhandler.handle(replyMessage);
-      unsubscribe(address + ReplyableMessage.HEADER_MESSAGE_RSP);
-      
     });
     
     send(address, message);
@@ -96,10 +94,14 @@ public abstract class AbstractEventBus implements EventBus {
         try {
             registry.handle(message);
           } catch (Exception e) {
+            logger.error("handle ....", e);
             interceptors.stream().forEach(interceptor -> interceptor.onError(message, e));
           }
         
         interceptors.stream().forEach(interceptor -> interceptor.onSuccess(message));
+        
+      } else {
+        logger.error("No registry for message address={}", message.getAddress());
       }
   }
 
