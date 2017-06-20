@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultMessageInterceptor implements MessageInterceptor {
 
-  static final Logger logger = LoggerFactory.getLogger(DisruptorEventBusImpl.class);
+  static final Logger logger = LoggerFactory.getLogger(DefaultMessageInterceptor.class);
   
   @Override
   public void beforeHandle(Message<?> message) {

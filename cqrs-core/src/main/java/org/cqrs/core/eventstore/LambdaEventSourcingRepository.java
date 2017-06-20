@@ -28,7 +28,7 @@ import org.cqrs.core.journals.JournalsStorage;
  */
 public class LambdaEventSourcingRepository extends AbstractEventRepository {
 
-  public LambdaEventSourcingRepository(EventStorage eventStorage, JournalsStorage journalsStorage) {
+  public LambdaEventSourcingRepository(EventStorage<?> eventStorage, JournalsStorage journalsStorage) {
     super(eventStorage, journalsStorage);
   }
 

@@ -15,9 +15,9 @@
 
 package org.cqrs.core.eventstore;
 
-public interface Serializer {
+public interface Serializer<T, U> {
 
-	byte[] serialize(Object object);
+	U serialize(T root);
 	
-	Object deserialize(byte[] buf);
+	T deserialize(U data);
 }

@@ -23,7 +23,7 @@ import java.util.TreeMap;
 import org.cqrs.core.DomainEvent;
 import org.cqrs.core.EventSourcingAggregateRoot;
 
-public class InMemoryEventStorage extends EventStorage {
+public class InMemoryEventStorage extends EventStorage<byte[]> {
 
 	private Map<String, NavigableMap<Long, EventData>> events = new HashMap<>();
 	private Map<String, SnapshotData> snapshots = new HashMap<>();
@@ -34,7 +34,7 @@ public class InMemoryEventStorage extends EventStorage {
 		EventSourcingAggregateRoot root = (EventSourcingAggregateRoot) event.getAggregateRoot();
 				
 		EventData data = new EventData(root.getId(), 
-				System.currentTimeMillis(), root.getVersion(), serializer.serialize(event));
+				System.currentTimeMillis(), root.getVersion(), eventSerializer.serialize(event));
 		
 		if (!events.containsKey(root.getId())) {
 			events.put(root.getId(), new TreeMap<>());
@@ -47,15 +47,15 @@ public class InMemoryEventStorage extends EventStorage {
 		NavigableMap<Long, EventData> map = events.get(aggregateId);
 		NavigableMap<Long, DomainEvent> events = new TreeMap<>();
 		map.tailMap(fromVersion).forEach((key, value) -> {
-			events.put(key, (DomainEvent) serializer.deserialize(value.getData()));
+			events.put(key, eventSerializer.deserialize(value.getData()));
 		});
 		return events;
 	}
 
 	@Override
-	public void storeSnapshot(EventSourcingAggregateRoot root) {
+	public <T extends EventSourcingAggregateRoot> void storeSnapshot(T root) {
 		snapshots.put(root.getId(), new SnapshotData(root.getId(), 
-				root.getClass().getName(), root.getVersion(), serializer.serialize(root)));
+				root.getClass().getName(), root.getVersion(), snapshotSerializer.serialize(root)));
 	}
 
 	@Override
@@ -70,6 +70,6 @@ public class InMemoryEventStorage extends EventStorage {
 			return null;
 		}
 				
-		return (T) serializer.deserialize(snapshots.get(aggregateId).getData());
+		return (T) snapshotSerializer.deserialize(snapshots.get(aggregateId).getData());
 	}
 }

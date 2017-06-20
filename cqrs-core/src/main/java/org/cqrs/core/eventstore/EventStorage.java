@@ -20,9 +20,10 @@ import java.util.NavigableMap;
 import org.cqrs.core.DomainEvent;
 import org.cqrs.core.EventSourcingAggregateRoot;
 
-public abstract class EventStorage {
+public abstract class EventStorage<U> {
 
-	protected Serializer serializer;
+	protected Serializer<DomainEvent, U> eventSerializer;
+	protected Serializer<? super EventSourcingAggregateRoot, U> snapshotSerializer;
 	
 //	protected String getAggregateId(EventSourcingAggregateRoot root, DomainEvent event) {
 //	  
@@ -38,13 +39,18 @@ public abstract class EventStorage {
 	
 	abstract NavigableMap<Long, DomainEvent> readEvents(String aggregateId, long fromVersion);
 	
-	abstract void storeSnapshot(EventSourcingAggregateRoot root);
+	abstract <T extends EventSourcingAggregateRoot> void storeSnapshot(T root);
 	
 	abstract void deleteSnapshots(String aggregateId);
 	
 	abstract <T extends EventSourcingAggregateRoot> T getAggregateRootFromSnapshot(String aggregateId);
 	
-	public void setSerializer(Serializer serializer) {
-		this.serializer = serializer;
+	public void setEventSerializer(Serializer<DomainEvent, U> serializer) {
+		this.eventSerializer = serializer;
 	}
+	
+    public void setSnapshotSerializer(Serializer<? super EventSourcingAggregateRoot, U> serializer) {
+      this.snapshotSerializer = serializer;
+    }	
+	
 }

@@ -24,8 +24,9 @@ import org.cqrs.core.eventbus.EventBus;
 import org.cqrs.core.eventbus.impl.DisruptorEventBusImpl;
 import org.cqrs.core.eventbus.impl.SimpleEventBusImpl;
 import org.cqrs.core.eventstore.EventRepository;
-import org.cqrs.core.eventstore.InMemoryEventStorage;
-import org.cqrs.core.eventstore.JavaBuildInSerializer;
+import org.cqrs.core.eventstore.EventStorage;
+import org.cqrs.core.eventstore.JdbcEventStorage;
+import org.cqrs.core.eventstore.JsonSerializer;
 import org.cqrs.core.eventstore.LambdaEventSourcingRepository;
 import org.cqrs.core.journals.EventsJournalsMessageInterceptor;
 import org.cqrs.core.journals.InMemoryJournalsStorage;
@@ -98,8 +99,14 @@ public class CQRS {
     journalsStorage = new InMemoryJournalsStorage();
     eventBus.addMessageInterceptor(new EventsJournalsMessageInterceptor(journalsStorage));
     
-    InMemoryEventStorage eventStorage = new InMemoryEventStorage();
-    eventStorage.setSerializer(new JavaBuildInSerializer());
+//    InMemoryEventStorage eventStorage = new InMemoryEventStorage();
+//    eventStorage.setEventSerializer(new JavaBuildInSerializer<DomainEvent>());
+//    eventStorage.setSnapshotSerializer(new JavaBuildInSerializer<EventSourcingAggregateRoot>());
+    
+    EventStorage<String> eventStorage = new JdbcEventStorage();
+    eventStorage.setEventSerializer(new JsonSerializer<DomainEvent>());
+    eventStorage.setSnapshotSerializer(new JsonSerializer<EventSourcingAggregateRoot>());
+    
 //    repository = new EventSourcingRepository(eventStorage, journalsStorage);
     repository = new LambdaEventSourcingRepository(eventStorage, journalsStorage);
   }

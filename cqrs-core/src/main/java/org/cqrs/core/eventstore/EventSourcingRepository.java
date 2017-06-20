@@ -31,7 +31,7 @@ public class EventSourcingRepository extends AbstractEventRepository {
 
   static final Logger logger = LoggerFactory.getLogger(EventSourcingRepository.class);
 
-  public EventSourcingRepository(EventStorage eventStorage, JournalsStorage journalsStorage) {
+  public EventSourcingRepository(EventStorage<?> eventStorage, JournalsStorage journalsStorage) {
     super(eventStorage, journalsStorage);
   }
   

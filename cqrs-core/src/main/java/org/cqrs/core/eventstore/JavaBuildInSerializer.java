@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class JavaBuildInSerializer implements Serializer {
+public class JavaBuildInSerializer<T> implements Serializer<T, byte[]> {
 
 	@Override
-	public byte[] serialize(Object object){
+	public byte[] serialize(T object){
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -39,17 +39,18 @@ public class JavaBuildInSerializer implements Serializer {
 		}
 	}
 
-	@Override
-	public Object deserialize(byte[] buf) {
+	@SuppressWarnings("unchecked")
+  @Override
+	public T deserialize(byte[] data) {
 		
 		try {
-			ByteArrayInputStream bis = new ByteArrayInputStream(buf);
+			ByteArrayInputStream bis = new ByteArrayInputStream(data);
 			ObjectInputStream ois = new ObjectInputStream(bis);
 			
 			bis.close();
 			ois.close();
 			
-			return ois.readObject();
+			return (T) ois.readObject();
 		} catch (Exception e) {
 			throw new RuntimeException("deserialize object fail.", e);
 		}

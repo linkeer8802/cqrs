@@ -35,10 +35,10 @@ public abstract class AbstractEventRepository implements EventRepository{
   
   static final Logger logger = LoggerFactory.getLogger(AbstractEventRepository.class);
   
-  protected EventStorage eventStorage;
+  protected EventStorage<?> eventStorage;
   protected JournalsStorage journalsStorage;
   
-  public AbstractEventRepository(EventStorage eventStorage, JournalsStorage journalsStorage) {
+  public AbstractEventRepository(EventStorage<?> eventStorage, JournalsStorage journalsStorage) {
     this.eventStorage = eventStorage;
     this.journalsStorage = journalsStorage;
   }
