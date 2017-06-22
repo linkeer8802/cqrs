@@ -18,16 +18,20 @@ package org.cqrs.core.eventbus;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.cqrs.util.SequenceUUID;
+
 /**
  * @author weird
  */
 public class Message<T> {
 
   public static final String HEADER_MESSAGE_ADDR = "HEADER_MESSAGE_ADDRESS";
+  public static final String HEADER_MESSAGE_SEND_FLAG = "HEADER_MESSAGE_SEND";
   
   private Long timestamp;
   private String messageId;
   private Class<T> type;
+  private boolean send;
   private Map<String, Object> headers;
   
   public Object getHeader(String key) {
@@ -36,11 +40,13 @@ public class Message<T> {
 
   private T body;
   
-  public Message(Class<T> type, T body) {
+  public Message(Class<T> type, T body, boolean send) {
     super();
     this.type = type;
     this.body = body;
+    this.send = send;
     this.timestamp= System.currentTimeMillis();
+    this.messageId = SequenceUUID.get().toString();
     this.headers = new HashMap<>();
   }
   
@@ -67,5 +73,13 @@ public class Message<T> {
   
   public String getAddress() {
     return (String) headers.get(HEADER_MESSAGE_ADDR);
+  }
+  
+  public boolean isSend() {
+    return send;
+  }
+  
+  public void setSend(boolean send) {
+    this.send = send;
   }
 }

@@ -29,7 +29,7 @@ import org.cqrs.core.eventbus.MessageHandler;
 public class SimpleEventBusImpl extends AbstractEventBus {
 
   @Override
-  public void delivery(String address, Message<?> event) {
+  public void deliver(String address, Message<?> event) {
     dispatch(address, event);
   }
 
@@ -46,7 +46,12 @@ public class SimpleEventBusImpl extends AbstractEventBus {
     });
     
     try {
-      return future.get(5L, TimeUnit.SECONDS);
+      T result = future.get(5L, TimeUnit.SECONDS);
+      if (result instanceof Throwable) {
+        throw new IllegalStateException((Throwable)result);
+      } else {
+        return result;
+      }
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new IllegalStateException(e);
     }

@@ -29,24 +29,29 @@ public class ReplyableMessage<T> extends Message<T>{
   public static final Object emptyMessage = new EmptyMessage();
   
   private volatile boolean isReply = false;
-  private volatile boolean sync = false;
   protected transient EventBus bus;
 
-  public ReplyableMessage(EventBus bus, Class<T> type, T body, boolean sync) {
-    super(type, body);
+  public ReplyableMessage(EventBus bus, Class<T> type, T body, boolean send) {
+    super(type, body, send);
     this.bus = bus;
-    this.sync = sync;
   }
   
   public void reply(Object message) {
     if (!isReply) {
-      if (message instanceof EmptyMessage && !sync) {
-        return;
-      }
-      logger.debug("reply message, address={}", getHeader(Message.HEADER_MESSAGE_ADDR).toString());
+      
+      logger.debug("Reply message, address={}", getAddress());
+      
       isReply = true;
-      bus.send(getHeader(Message.HEADER_MESSAGE_ADDR).toString() + HEADER_MESSAGE_RSP, message);
+      bus.send(getReplyAddress() , message);
     }
+  }
+
+  public void fail(Throwable e) {
+    reply(e);
+  }
+  
+  public String getReplyAddress() {
+    return getMessageId() + HEADER_MESSAGE_RSP;
   }
 
  static class EmptyMessage {}

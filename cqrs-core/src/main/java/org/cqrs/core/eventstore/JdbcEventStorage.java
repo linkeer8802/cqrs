@@ -26,17 +26,20 @@ public class JdbcEventStorage extends EventStorage<String> {
   @Override
   void appendEvent(DomainEvent event) {
     
+    String eventId = SequenceUUID.get().toString();
     String sql = "INSERT INTO events(id,aggregate_id,timestamp,version,data) VALUES(?,?,?,?,?)";
     
     try {
       PreparedStatement stmt = getStatement(sql);
-      stmt.setString(1, SequenceUUID.get().toString());
+      stmt.setString(1, eventId);
       stmt.setString(2, event.getAggregateRoot().getId());
       stmt.setLong(3, System.currentTimeMillis());
       stmt.setLong(4, event.getAggregateRoot().getVersion());
       stmt.setString(5, eventSerializer.serialize(event));
       
-      JdbcUtil.execute(stmt);
+      if (JdbcUtil.execute(stmt) != 1) {
+        throw new RuntimeException("Insert domain event data to database fail.");
+      }
       
     } catch (SQLException e) {
       throw new RuntimeException("Append event error, cause by:", e);

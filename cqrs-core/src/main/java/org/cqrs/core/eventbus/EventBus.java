@@ -20,19 +20,19 @@ package org.cqrs.core.eventbus;
  */
 public interface EventBus {
   /**
-   * 发布消息到指定的address，这个address可以被0各或多个订阅者订阅。
+   * 发布消息到指定的address，这个address可以被多个订阅者订阅。
    * @param address
    * @param message
    */
   void publish(String address, Object message);
   /**
-   * 发送消息到指定的address，这个address一般只可以被1个订阅者订阅。
+   * 发送消息到指定的address，这个address一般只可以被1个订阅者订阅（多个时随机处理一个）。
    * @param address
    * @param message
    */
   void send(String address, Object message);
   /**
-   * 和{@link #send(String, Object)}一样，只不过该方法可注册一个回复结果消息的replyhandler。
+   * 和{@link #send(String, Object)}一样，同时可注册一个回复结果消息的replyhandler。
    * @param address
    * @param message
    * @param replyhandler
@@ -40,7 +40,7 @@ public interface EventBus {
    */
   void send(String address, Object message, MessageHandler<?> replyhandler);
   /**
-   * 和{@link #send(String, Object)}一样，只不过该方法是同步运行并且返回一个回复结果的消息。
+   * 和{@link #send(String, Object)}一样，但该方法是同步运行并且返回一个回复结果的消息。
    * @param address
    * @param message
    * @return

@@ -13,27 +13,27 @@
  *  limitations under the License.
  */
 
-package org.cqrs.core.journals;
+package org.cqrs.core.eventbus.impl;
 
-import org.cqrs.core.DomainEvent;
 import org.cqrs.core.eventbus.Message;
-import org.cqrs.core.eventbus.impl.MessageInterceptorAdapter;
+import org.cqrs.core.eventbus.MessageInterceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author weird
  */
-public class EventsJournalsMessageInterceptor extends MessageInterceptorAdapter {
+public abstract class MessageInterceptorAdapter implements MessageInterceptor {
 
-  private JournalsStorage journalsStorage;
+  static final Logger logger = LoggerFactory.getLogger(MessageInterceptorAdapter.class);
   
-  
-  public EventsJournalsMessageInterceptor(JournalsStorage journalsStorage) {
-    this.journalsStorage = journalsStorage;
-  }
-  
-  @Override 
-  public void onSuccess(Message<?> message) {
-    DomainEvent event = (DomainEvent) message.getBody();
-    journalsStorage.submit(event.getAggregateRoot().getId(), event.getAggregateRoot().getVersion());
-  }
+  @Override
+  public void beforeHandle(Message<?> message) {}
+
+  @Override
+  public void onSuccess(Message<?> message) {}
+
+  @Override
+  public void onError(Message<?> message, Throwable cause) {}
+
 }

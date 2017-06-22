@@ -52,36 +52,53 @@ public abstract class AbstractEventBus implements EventBus {
     return this;
   }
   
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void publish(String address, Object message) {
     
     logger.debug("Publish message at address={}", address);
     
-    delivery(address, new Message(message.getClass(), message).addHeader(Message.HEADER_MESSAGE_ADDR, address));
+    deliver(address, buildMessage(address, message, false, false));
   }
   
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void send(String address, Object message) {
     
     logger.debug("Send message at address={}", address);
     
-    delivery(address, new ReplyableMessage(this, message.getClass(), message, false).addHeader(Message.HEADER_MESSAGE_ADDR, address));
+    deliver(address, buildMessage(address, message, false, true));
   }
   
   @SuppressWarnings("unchecked")
   @Override
   public void send(String address, Object message, MessageHandler<?> replyhandler) {
     
-    subscribeOnce(address + ReplyableMessage.HEADER_MESSAGE_RSP, (replyMessage) -> {
+    logger.debug("Send message at address={}", address);
+    
+    ReplyableMessage<?> messageInfo = (ReplyableMessage<?>) buildMessage(address, message, true, true);
+    subscribeOnce(messageInfo.getReplyAddress(), (replyMessage) -> {
       
-      replyhandler.handle(replyMessage);
+      if (replyMessage.getBody() instanceof Throwable) {
+        
+        logger.error("Reply a error message,", (Throwable)replyMessage.getBody());
+        
+      } else {
+        
+        replyhandler.handle(replyMessage);
+      }
     });
     
-    send(address, message);
+    deliver(address, messageInfo);
   }
   
-  public abstract void delivery(String address, Message<?> message);
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  protected Message<?> buildMessage(String address, Object message, Boolean isReply, boolean send) {
+    if (isReply) {
+      return new ReplyableMessage(this, message.getClass(), message, send).addHeader(Message.HEADER_MESSAGE_ADDR, address);
+    } else {
+      return new Message(message.getClass(), message, send).addHeader(Message.HEADER_MESSAGE_ADDR, address);
+    }
+  }
+  
+  public abstract void deliver(String address, Message<?> message);
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   protected void dispatch(String address, Message message) {
@@ -93,15 +110,20 @@ public abstract class AbstractEventBus implements EventBus {
       if (registry != null) {
         try {
             registry.handle(message);
+            
           } catch (Exception e) {
-            logger.error("handle ....", e);
+            
+            if (message instanceof ReplyableMessage) {
+              ((ReplyableMessage)message).fail(e);
+            }
+            
             interceptors.stream().forEach(interceptor -> interceptor.onError(message, e));
           }
         
         interceptors.stream().forEach(interceptor -> interceptor.onSuccess(message));
         
       } else {
-        logger.error("No registry for message address={}", message.getAddress());
+        logger.warn("No registry for message address={}", message.getAddress());
       }
   }
 
@@ -109,7 +131,7 @@ public abstract class AbstractEventBus implements EventBus {
   @Override
   public void subscribe(String address, MessageHandler handler) {
     if (!registryMap.containsKey(address)) {
-      registryMap.put(address, new MessageHandlerRegistry(address));
+      registryMap.put(address, new MessageHandlerRegistry());
     }
     registryMap.get(address).addHandler(handler);
   }

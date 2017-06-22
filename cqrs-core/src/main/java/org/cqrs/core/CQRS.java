@@ -132,11 +132,12 @@ public class CQRS {
   }
   
   public <T extends EventSourcingAggregateRoot> void applyEvent(T aggregateRoot, DomainEvent event) {
-    // Apply this event to current aggregateRoot and then the current aggregateRoot is newest state.
+    // Apply this event to current aggregateRoot and then the return aggregateRoot is newest state.
     event.aggregateRoot = replayEvent(aggregateRoot, event);
     
     repository.saveEvent(event);
     publishEvent(event.getClass().getName(), event);
+//    publishEvent(event.getEventId(), event);
   }
   
   @SuppressWarnings("unchecked")

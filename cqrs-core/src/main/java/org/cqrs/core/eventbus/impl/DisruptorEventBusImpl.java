@@ -69,7 +69,7 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
   }
 
   @Override
-  public void delivery(String address, Message<?> message) {
+  public void deliver(String address, Message<?> message) {
     disruptor.getRingBuffer().publishEvent((event, sequence) -> {
       event.setMessage(message);
     });
@@ -79,28 +79,42 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
     try {
       return execute(address, message, 5L);
     } catch (TimeoutException e) {
-      throw new IllegalArgumentException(e);
+      throw new IllegalStateException(e);
+//      logger.error("execute error.", e);
+//      return null;
     }
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({ "unchecked"})
   public <T> T execute(String address, Object message, Long timeoutInSeconds) throws TimeoutException {
     
     logger.debug("Execute message at address={}", address);
     
     CompletableFuture<T> future = new CompletableFuture<T>();
+    ReplyableMessage<?> messageInfo = (ReplyableMessage<?>) buildMessage(address, message, true, true);
     
-    subscribeOnce(address + ReplyableMessage.HEADER_MESSAGE_RSP, (replyMessage) -> {
+    subscribeOnce(messageInfo.getReplyAddress(), (replyMessage) -> {
       
       future.complete((T) replyMessage.getBody());
     });
     
-    delivery(address, new ReplyableMessage(this, message.getClass(), message, true).addHeader(Message.HEADER_MESSAGE_ADDR, address));
+    deliver(address, messageInfo);
 
+    T result = null;
     try {
-      return timeoutInSeconds != null ? future.get(timeoutInSeconds, TimeUnit.SECONDS) : future.get();
+      if (timeoutInSeconds != null) {
+        result = future.get(timeoutInSeconds, TimeUnit.SECONDS);
+      } else {
+        result = future.get();
+      }
+      
+      if (result instanceof Throwable) {
+        throw new IllegalStateException((Throwable)result);
+      } else {
+        return result;
+      }
     } catch (InterruptedException | ExecutionException e) {
-      throw new IllegalArgumentException(e);
+      throw new IllegalStateException(e);
     }
   }
   

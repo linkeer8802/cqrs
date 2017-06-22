@@ -65,10 +65,15 @@ public class DomainContext<T extends EventSourcingAggregateRoot> {
     }
     
     commandBus.subscribe(address.toString(), message -> {
-      ((ReplyableMessage<?>)message).reply(handleEvent(message, (context, aggregateRoot) -> {
+      
+      handleEvent(message, (context, aggregateRoot) -> {
         consumer.accept(context, aggregateRoot); 
-        return ReplyableMessage.emptyMessage;
-       }));
+        return null;
+      });
+      
+      if (message instanceof ReplyableMessage) {
+        ((ReplyableMessage<?>)message).reply(ReplyableMessage.emptyMessage);
+      }
     });
     
     return this;

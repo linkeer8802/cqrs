@@ -16,6 +16,7 @@
 package org.cqrs.core.eventbus.impl;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.cqrs.core.eventbus.Message;
@@ -26,11 +27,9 @@ import org.cqrs.core.eventbus.MessageHandler;
  */
 public class MessageHandlerRegistry<T> {
 
-  private String address;
   private List<MessageHandler<T>> handlers;
   
-  public MessageHandlerRegistry(String address) {
-    this.address = address;
+  public MessageHandlerRegistry() {
     this.handlers = new CopyOnWriteArrayList<>();
   }
   
@@ -43,8 +42,16 @@ public class MessageHandlerRegistry<T> {
   }
   
   public void handle(Message<T> message) {
-    for (MessageHandler<T> messageHandler : handlers) {
-      messageHandler.handle(message);
+    
+    if (message.isSend()) {
+      
+      handlers.get(new Random().nextInt(handlers.size())).handle(message);
+      
+    } else {
+      
+      for (MessageHandler<T> messageHandler : handlers) {
+        messageHandler.handle(message);
+      }
     }
   }
 }
