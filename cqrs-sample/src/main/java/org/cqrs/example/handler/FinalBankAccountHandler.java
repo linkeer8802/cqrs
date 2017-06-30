@@ -18,9 +18,10 @@ package org.cqrs.example.handler;
 import org.cqrs.core.DomainContext;
 import org.cqrs.core.DomainHandler;
 import org.cqrs.example.domain.FinalBankAccount;
-import org.cqrs.example.event.AccountDepositedEvent;
 import org.cqrs.example.event.AccountOpenedEvent;
-import org.cqrs.example.event.AccountWithdrawedEvent;
+import org.cqrs.example.event.TransferOutRolledbackEvent;
+import org.cqrs.example.event.TransferedInEvent;
+import org.cqrs.example.event.TransferedOutEvent;
 import org.cqrs.example.exception.BalanceNotEnoughException;
 
 /**
@@ -31,10 +32,12 @@ public class FinalBankAccountHandler extends DomainHandler<FinalBankAccount>{
   public static enum BankAccountCmd {
     /**开户**/
     OPEN_ACCOUNT,
-    /**存款**/
-    DEPOSITE_MONEY,
-    /**取款**/
-    WITHDRAWAL_MONEY
+    /**转入**/
+    TRANSFERED_IN,
+    /**转出**/
+    TRANSFERED_OUT,
+    /**回滚转出**/
+    ROLLBACK_TRANSFER_OUT
   }
   
   public FinalBankAccountHandler(Class<FinalBankAccount> domainType) {
@@ -46,45 +49,82 @@ public class FinalBankAccountHandler extends DomainHandler<FinalBankAccount>{
      * 账号开户
      */
     domain.onCmd(BankAccountCmd.OPEN_ACCOUNT, (context, bankAccount) -> {
+      
       String id = context.uniqueId();
+      
       context.publishEvent(bankAccount, new AccountOpenedEvent(
           id, context.strArg("name"), context.doubleArg("balance")));
+      
       return id;
       
     }).onReplay(AccountOpenedEvent.class, (bankAccount, event) -> {
+      
       return new FinalBankAccount(event.aggregateRootId, event.name, event.balance);
       
     }).onEvent(AccountOpenedEvent.class, (event) -> {
+      
       System.out.println(event.name + " open accout");
     });
     /**
-     * 账号存款
+     * 转入
      */
-    domain.onCmd(BankAccountCmd.DEPOSITE_MONEY, (context, bankAccount) -> {
-      context.publishEvent(bankAccount, new AccountDepositedEvent(context.doubleArg("amount")));
+    domain.onCmd(BankAccountCmd.TRANSFERED_IN, (context, bankAccount) -> {
+      
+      Double amount = context.doubleArg("amount");
+      
+      if (amount >= 500) {
+        throw new IllegalStateException("单笔交易额超上限。");
+      }
+      
+      context.publishEvent(bankAccount, new TransferedInEvent(amount));
+      
       System.out.println("----------------------------------------");
       
-    }).onReplay(AccountDepositedEvent.class, (bankAccount, event)-> {
-      return bankAccount.deposit(event.amount);
+    }).onReplay(TransferedInEvent.class, (bankAccount, event)-> {
       
-    }).onEvent(AccountDepositedEvent.class, (event) -> {
-      System.out.println("Deposited money " + event.amount);
+      return bankAccount.transferedIn(event.amount);
+      
+    }).onEvent(TransferedInEvent.class, (event) -> {
+      
+      System.out.println("Transfered in money " + event.amount);
     });
     /**
-     * 账号取款
+     * 转出
      */
-    domain.onCmd(BankAccountCmd.WITHDRAWAL_MONEY, (context, bankAccount) -> {
+    domain.onCmd(BankAccountCmd.TRANSFERED_OUT, (context, bankAccount) -> {
+      
       Double amount = context.doubleArg("amount");
+      
       if (bankAccount.balance < amount) {
         throw new BalanceNotEnoughException("账户余额不足");
       }
-      context.publishEvent(bankAccount, new AccountWithdrawedEvent(amount));
       
-    }).onReplay(AccountWithdrawedEvent.class, (bankAccount, event)-> {
+      context.publishEvent(bankAccount, new TransferedOutEvent(amount));
+      
+    }).onReplay(TransferedOutEvent.class, (bankAccount, event)-> {
+      
       return bankAccount.withdrawal(event.amount);
       
-    }).onEvent(AccountWithdrawedEvent.class, (event) -> {
-      System.out.println("Withdrawed money " + event.amount);
+    }).onEvent(TransferedOutEvent.class, (event) -> {
+      
+      System.out.println("Transfered out money " + event.amount);
+    });
+    /**
+     * 回滚转出
+     */
+    domain.onCmd(BankAccountCmd.ROLLBACK_TRANSFER_OUT, (context, bankAccount) -> {
+      
+      Double amount = context.doubleArg("amount");
+      
+      context.publishEvent(bankAccount, new TransferOutRolledbackEvent(amount));
+      
+    }).onReplay(TransferOutRolledbackEvent.class, (bankAccount, event)-> {
+      
+      return bankAccount.rollbackRransferout(event.amount);
+      
+    }).onEvent(TransferOutRolledbackEvent.class, (event) -> {
+      
+      System.out.println("Rollback transfered out money " + event.amount);
     });
   }
 }

@@ -47,6 +47,31 @@ public class FinalBankAccount extends EventSourcingAggregateRoot{
   public FinalBankAccount withdrawal(double amount) {
     return new FinalBankAccount(id, name, balance - amount);
   }  
+  /**
+   * 转出指定金额
+   * @param amount 要转出的金额
+   * @return 
+   */
+  public FinalBankAccount transferedOut(double amount) {
+    return new FinalBankAccount(id, name, balance - amount);
+  } 
+  /**
+   * 转入指定金额
+   * @param amount 要转入的金额
+   * @return 
+   */
+  public FinalBankAccount transferedIn(double amount) {
+    return new FinalBankAccount(id, name, balance + amount);
+  }
+  
+  /**
+   * 回滚转出的金额
+   * @param amount 要回滚的金额
+   * @return 
+   */
+  public FinalBankAccount rollbackRransferout(double amount) {
+    return new FinalBankAccount(id, name, balance + amount);
+  }
   
   @Override
   public String toString() {

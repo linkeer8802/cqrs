@@ -34,13 +34,13 @@ public interface EventBus {
    */
   void send(String address, Object message);
   /**
-   * 和{@link #send(String, Object)}一样，同时可注册一个回复结果消息的replyhandler。
+   * 和{@link #send(String, Object)}一样，同时返回一个CompletableFuture引用
    * @param address
    * @param message
    * @param replyhandler
    * @return
    */
-  <T> CompletableFuture<T> send(String address, Object message, CompletableFuture<T> future);
+  <T> CompletableFuture<T> send(String address, Object message, final CompletableFuture<T> future);
   /**
    * 和{@link #send(String, Object)}一样，但该方法是同步运行并且返回一个回复结果的消息。
    * @param address

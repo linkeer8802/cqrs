@@ -80,29 +80,15 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
       return execute(address, message, 5L);
     } catch (TimeoutException e) {
       throw new IllegalStateException(e);
-//      logger.error("execute error.", e);
-//      return null;
     }
   }
 
-  @SuppressWarnings({ "unchecked"})
   public <T> T execute(String address, Object message, Long timeoutInSeconds) throws TimeoutException {
     
-    logger.debug("Execute message at address={}", address);
-    
     CompletableFuture<T> future = new CompletableFuture<T>();
-    ReplyableMessage<?> messageInfo = (ReplyableMessage<?>) buildMessage(address, message, true, true);
     
-    subscribeOnce(messageInfo.getReplyAddress(), (replyMessage) -> {
-      if (replyMessage.getBody() instanceof Throwable) {
-        future.completeExceptionally((Throwable) replyMessage.getBody());
-      } else {
-        future.complete((T) replyMessage.getBody());
-      }
-    });
+    send(address, message, future);
     
-    deliver(address, messageInfo);
-
     T result = null;
     try {
       if (timeoutInSeconds != null) {

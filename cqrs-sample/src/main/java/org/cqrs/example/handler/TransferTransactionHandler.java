@@ -19,10 +19,11 @@ import org.cqrs.core.DomainContext;
 import org.cqrs.core.DomainHandler;
 import org.cqrs.example.domain.TransactionState;
 import org.cqrs.example.domain.TransferTransaction;
-import org.cqrs.example.event.AccountDepositedEvent;
-import org.cqrs.example.event.AccountWithdrawedEvent;
 import org.cqrs.example.event.TransactionStartedEvent;
-import org.cqrs.example.handler.BankAccountHandler.BankAccountCmd;
+import org.cqrs.example.event.TransferedOutEvent;
+import org.cqrs.example.handler.FinalBankAccountHandler.BankAccountCmd;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -31,9 +32,10 @@ import com.google.common.collect.ImmutableMap;
  */
 public class TransferTransactionHandler extends DomainHandler<TransferTransaction>{
 
+  static final Logger logger = LoggerFactory.getLogger(TransferTransactionHandler.class);
+  
   public static enum TransferTransactionCmd {
-    BEGIN_START_TRANSFER,
-    TRANSFER_OUT_FROM_SOURCE
+    BEGIN_START_TRANSFER
   }
   
   public TransferTransactionHandler(Class<TransferTransaction> domainType) {
@@ -60,6 +62,7 @@ public class TransferTransactionHandler extends DomainHandler<TransferTransactio
           + " to targetId " + event.targetId + " with amount " + event.amount);
       
     }).onSagaStart(TransactionStartedEvent.class, (context, event) -> {
+      
       context.associateWith("sourceId", event.sourceId);
       context.associateWith("targetId", event.targetId);
       
@@ -67,15 +70,26 @@ public class TransferTransactionHandler extends DomainHandler<TransferTransactio
           event.targetId, event.amount, event.transferDateTime, TransactionState.INIT);
       
     }, (context, event) -> {
-      context.send(BankAccountCmd.WITHDRAWAL_MONEY,
+      
+      context.send(
+          BankAccountCmd.TRANSFERED_OUT, 
           ImmutableMap.of("id", event.sourceId, "amount", event.amount));
       
-    }).onSaga(AccountWithdrawedEvent.class, "sourceId", (context, event) -> {
-      context.send(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", 
-          (String)context.associationProperty("targetId"), "amount", event.amount)); 
+    }).onSaga(TransferedOutEvent.class, "sourceId", (context, event) -> {
       
-    }).onSaga(AccountDepositedEvent.class, "targetId", (context, event) -> {
-      context.end();
+      context.send(BankAccountCmd.TRANSFERED_IN, 
+          ImmutableMap.of("id", (String)context.associationProperty("targetId"), "amount", event.amount))
+      .whenComplete((result, ex) -> {
+        if (ex != null) {
+          logger.error("Deposite money error, cause by {}", ex.getMessage());
+          
+          context.send(BankAccountCmd.ROLLBACK_TRANSFER_OUT, 
+              ImmutableMap.of("id", (String)context.associationProperty("sourceId"), "amount", event.amount));
+        } else {
+          context.end();
+        }
+      }); 
+      
     });
   }
 }
