@@ -41,6 +41,24 @@ public class BankAccount extends EventSourcingAggregateRoot{
     return this;
   }
   /**
+   * 转出指定金额
+   * @param amount 要转出的金额
+   * @return 
+   */
+  public BankAccount transferedOut(double amount) {
+    balance = balance - amount;
+    return this;
+  } 
+  /**
+   * 转入指定金额
+   * @param amount 要转入的金额
+   * @return 
+   */
+  public BankAccount transferedIn(double amount) {
+    balance = balance + amount;
+    return this;
+  }
+  /**
    * 取出指定金额
    * @param amount 要取出的金额
    * @return 
@@ -48,7 +66,16 @@ public class BankAccount extends EventSourcingAggregateRoot{
   public BankAccount withdrawal(double amount) {
     balance = balance - amount;
     return this;
-  }  
+  }
+  /**
+   * 回滚转出的金额
+   * @param amount 要回滚的金额
+   * @return 
+   */
+  public BankAccount rollbackRransferout(double amount) {
+    balance = balance + amount;
+    return this;
+  }
 
   public String getName() {return name;}
   public Double getBalance() {return balance;}

@@ -16,12 +16,13 @@
 package org.cqrs.example;
 
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 import org.cqrs.core.CQRS;
 import org.cqrs.example.domain.FinalBankAccount;
 import org.cqrs.example.domain.TransferTransaction;
-import org.cqrs.example.handler.BankAccountHandler.BankAccountCmd;
 import org.cqrs.example.handler.FinalBankAccountHandler;
+import org.cqrs.example.handler.FinalBankAccountHandler.BankAccountCmd;
 import org.cqrs.example.handler.TransferTransactionHandler;
 import org.cqrs.example.handler.TransferTransactionHandler.TransferTransactionCmd;
 
@@ -29,32 +30,30 @@ import com.google.common.collect.ImmutableMap;
 
 public class BankAccountTransferTest {
 
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) throws InterruptedException, ExecutionException {
     
     CQRS cqrs = CQRS.get();
     new FinalBankAccountHandler(FinalBankAccount.class);
     new TransferTransactionHandler(TransferTransaction.class);
     
-//    String id = cqrs.execute(BankAccountCmd.OPEN_ACCOUNT, ImmutableMap.of("name", "wrd", "balance", 100.00));
-//    cqrs.execute(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", id, "amount", 50.00));
-//    cqrs.execute(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", id, "amount", 50.00));
-//    cqrs.execute(BankAccountCmd.WITHDRAWAL_MONEY, ImmutableMap.of("id", id, "amount", 200.00));
-//    
-//    System.out.println(cqrs.domain(FinalBankAccount.class).aggregateRoot(id));
     
-    String sourceId = cqrs.execute(BankAccountCmd.OPEN_ACCOUNT, ImmutableMap.of("name", "wrd", "balance", 100.00));
+    String sourceId = cqrs.execute(BankAccountCmd.OPEN_ACCOUNT, ImmutableMap.of("name", "wrd", "balance", 1000.00));
     String targetId = cqrs.execute(BankAccountCmd.OPEN_ACCOUNT, ImmutableMap.of("name", "linkeer", "balance", 100.00));
     
-    String transactionId = cqrs.execute(TransferTransactionCmd.BEGIN_START_TRANSFER, ImmutableMap.of(
-        "sourceId", sourceId, "targetId", targetId, "amount", 500.00, "transferDateTime", new Date()));
+    String transactionId = cqrs.execute(TransferTransactionCmd.BEGIN_START_TRANSFER, 
+        ImmutableMap.of(
+            "sourceId", sourceId, 
+            "targetId", targetId, 
+            "amount", 500.00, 
+            "transferDateTime", 
+            new Date()));
     
     System.out.println("transactionId:" + transactionId);
     
-    Thread.sleep(50);
+    Thread.sleep(500);
+    
     System.out.println(cqrs.domain(FinalBankAccount.class).aggregateRoot(sourceId));
     System.out.println(cqrs.domain(FinalBankAccount.class).aggregateRoot(targetId));
-    
-//    cqrs.domain(TransferTransaction.class).aggregateRoot(transactionId);
     
     cqrs.shutdown();
   }

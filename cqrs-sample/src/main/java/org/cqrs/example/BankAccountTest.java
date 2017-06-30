@@ -31,9 +31,12 @@ public class BankAccountTest {
     
     String id = cqrs.execute(BankAccountCmd.OPEN_ACCOUNT, ImmutableMap.of("name", "wrd", "balance", 100.00));
     
-    cqrs.execute(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", id, "amount", 50.00));
-    cqrs.execute(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", id, "amount", 50.00));
-    cqrs.execute(BankAccountCmd.WITHDRAWAL_MONEY, ImmutableMap.of("id", id, "amount", 201.00));
+//    for (int i = 0; i < 500; i++) {
+//      cqrs.execute(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", id, "amount", Math.random() * 100));
+//    }
+    cqrs.execute(BankAccountCmd.DEPOSITE_MONEY, ImmutableMap.of("id", id, "amount", Math.random() * 100));
+    
+//    cqrs.execute(BankAccountCmd.WITHDRAWAL_MONEY, ImmutableMap.of("id", id, "amount", 101.00));
     
     System.out.println("========================================");
     
