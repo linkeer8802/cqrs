@@ -17,6 +17,7 @@ package org.cqrs.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -137,7 +138,6 @@ public class CQRS {
     
     repository.saveEvent(event);
     publishEvent(event.getClass().getName(), event);
-//    publishEvent(event.getEventId(), event);
   }
   
   @SuppressWarnings("unchecked")
@@ -151,11 +151,11 @@ public class CQRS {
     eventBus.publish(address, event);
   }
   
-  public void send(Object name, Object command) {
+  public <T> CompletableFuture<T> send(Object name, Object command) {
     if (name == null || command == null) {
       throw new IllegalArgumentException("The argument 'name' and 'command' must to be not null.");
     }
-    commandBus.send(name.toString(), command);
+    return commandBus.send(name.toString(), command, new CompletableFuture<T>());
   }
   
   @SuppressWarnings("unchecked")

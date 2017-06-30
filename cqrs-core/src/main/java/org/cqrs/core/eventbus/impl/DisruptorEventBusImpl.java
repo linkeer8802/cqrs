@@ -94,8 +94,11 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
     ReplyableMessage<?> messageInfo = (ReplyableMessage<?>) buildMessage(address, message, true, true);
     
     subscribeOnce(messageInfo.getReplyAddress(), (replyMessage) -> {
-      
-      future.complete((T) replyMessage.getBody());
+      if (replyMessage.getBody() instanceof Throwable) {
+        future.completeExceptionally((Throwable) replyMessage.getBody());
+      } else {
+        future.complete((T) replyMessage.getBody());
+      }
     });
     
     deliver(address, messageInfo);

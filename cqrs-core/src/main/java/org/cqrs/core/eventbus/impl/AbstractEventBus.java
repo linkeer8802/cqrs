@@ -18,6 +18,7 @@ package org.cqrs.core.eventbus.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.cqrs.core.eventbus.EventBus;
@@ -69,24 +70,25 @@ public abstract class AbstractEventBus implements EventBus {
   
   @SuppressWarnings("unchecked")
   @Override
-  public void send(String address, Object message, MessageHandler<?> replyhandler) {
+  public <T> CompletableFuture<T> send(String address, Object message, final CompletableFuture<T> future) {
     
-    logger.debug("Send message at address={}", address);
+    logger.debug("Send future message at address={}", address);
     
     ReplyableMessage<?> messageInfo = (ReplyableMessage<?>) buildMessage(address, message, true, true);
     subscribeOnce(messageInfo.getReplyAddress(), (replyMessage) -> {
       
       if (replyMessage.getBody() instanceof Throwable) {
         
-        logger.error("Reply a error message,", (Throwable)replyMessage.getBody());
+        future.completeExceptionally((Throwable)replyMessage.getBody());
         
       } else {
-        
-        replyhandler.handle(replyMessage);
+        future.complete((T) replyMessage.getBody());
       }
     });
     
     deliver(address, messageInfo);
+    
+    return future;
   }
   
   @SuppressWarnings({ "rawtypes", "unchecked" })

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.cqrs.core.eventbus.Message;
-import org.cqrs.core.eventbus.MessageHandler;
 
 /**
  * @author weird
@@ -38,12 +37,7 @@ public class SimpleEventBusImpl extends AbstractEventBus {
     
     CompletableFuture<T> future = new CompletableFuture<T>();
     
-    send(address, command, new MessageHandler<T>() {
-      @Override
-      public void handle(Message<T> message) {
-        future.complete(message.getBody());
-      }
-    });
+    send(address, command, future);
     
     try {
       T result = future.get(5L, TimeUnit.SECONDS);

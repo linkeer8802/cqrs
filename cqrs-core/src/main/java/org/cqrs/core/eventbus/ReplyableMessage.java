@@ -42,7 +42,7 @@ public class ReplyableMessage<T> extends Message<T>{
       logger.debug("Reply message, address={}", getAddress());
       
       isReply = true;
-      bus.send(getReplyAddress() , message);
+      bus.send(getReplyAddress(), message);
     }
   }
 

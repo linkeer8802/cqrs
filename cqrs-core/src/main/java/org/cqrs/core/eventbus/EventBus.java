@@ -15,6 +15,8 @@
 
 package org.cqrs.core.eventbus;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * @author weird
  */
@@ -38,7 +40,7 @@ public interface EventBus {
    * @param replyhandler
    * @return
    */
-  void send(String address, Object message, MessageHandler<?> replyhandler);
+  <T> CompletableFuture<T> send(String address, Object message, CompletableFuture<T> future);
   /**
    * 和{@link #send(String, Object)}一样，但该方法是同步运行并且返回一个回复结果的消息。
    * @param address

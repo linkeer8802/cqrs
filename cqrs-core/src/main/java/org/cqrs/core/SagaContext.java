@@ -17,6 +17,7 @@ package org.cqrs.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author weird
@@ -39,8 +40,8 @@ public class SagaContext {
     return (T) attrs.get(property);
   }
 
-  public void send(Object name, Object command) {
-    CQRS.get().send(name, command);
+  public <T> CompletableFuture<T> send(Object name, Object command) {
+    return CQRS.get().send(name, command);
   }
 
   public void end() {

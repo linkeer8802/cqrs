@@ -18,6 +18,7 @@ package org.cqrs.core;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.cqrs.util.SequenceUUID;
 
@@ -45,8 +46,8 @@ public class CommandContext {
     }
   }
   
-  public void send(Object name, Object command) {
-    CQRS.get().send(name, command);
+  public <T> CompletableFuture<T> send(Object name, Object command) {
+    return CQRS.get().send(name, command);
   }
   
   @SuppressWarnings("unchecked")
