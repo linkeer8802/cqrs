@@ -47,7 +47,7 @@ public class BankAccountHandler extends DomainHandler<BankAccount>{
      */
     domain.onCmd(BankAccountCmd.OPEN_ACCOUNT, (context, bankAccount) -> {
       String id = context.uniqueId();
-      context.publishEvent(bankAccount, new AccountOpenedEvent(
+      context.applyEvent(bankAccount, new AccountOpenedEvent(
           id, context.strArg("name"), context.doubleArg("balance")));
       return id;
       
@@ -61,7 +61,7 @@ public class BankAccountHandler extends DomainHandler<BankAccount>{
      * 账号存款
      */
     domain.onCmd(BankAccountCmd.DEPOSITE_MONEY, (context, bankAccount) -> {
-      context.publishEvent(bankAccount, new AccountDepositedEvent(context.doubleArg("amount")));
+      context.applyEvent(bankAccount, new AccountDepositedEvent(context.doubleArg("amount")));
       
     }).onReplay(AccountDepositedEvent.class, (bankAccount, event)-> {
       return bankAccount.deposit(event.amount);
@@ -77,7 +77,7 @@ public class BankAccountHandler extends DomainHandler<BankAccount>{
       if (bankAccount.getBalance() < amount) {
         throw new BalanceNotEnoughException("账户余额不足");
       }
-      context.publishEvent(bankAccount, new AccountWithdrawedEvent(amount));
+      context.applyEvent(bankAccount, new AccountWithdrawedEvent(amount));
       
     }).onReplay(AccountWithdrawedEvent.class, (bankAccount, event)-> {
       return bankAccount.withdrawal(event.amount);

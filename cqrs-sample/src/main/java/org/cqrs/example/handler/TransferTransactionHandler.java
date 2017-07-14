@@ -46,7 +46,7 @@ public class TransferTransactionHandler extends DomainHandler<TransferTransactio
   public void handle(DomainContext<TransferTransaction> domainContext) {
     domainContext.onCmd(TransferTransactionCmd.BEGIN_START_TRANSFER, (context, transferTransaction) -> {
       String id = context.uniqueId();
-      context.publishEvent(transferTransaction, 
+      context.applyEvent(transferTransaction, 
           new TransactionStartedEvent(
           id, 
           context.strArg("sourceId"), 

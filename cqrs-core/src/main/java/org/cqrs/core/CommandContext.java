@@ -38,7 +38,7 @@ public class CommandContext {
     return SequenceUUID.get().toString();
   }
   
-  public void publishEvent(EventSourcingAggregateRoot aggregateRoot, DomainEvent event) {
+  public void applyEvent(EventSourcingAggregateRoot aggregateRoot, DomainEvent event) {
     if (aggregateRoot == null) {
       CQRS.get().applyEvent(null, event);
     } else {

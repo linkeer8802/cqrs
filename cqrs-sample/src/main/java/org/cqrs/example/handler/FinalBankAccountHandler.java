@@ -52,7 +52,7 @@ public class FinalBankAccountHandler extends DomainHandler<FinalBankAccount>{
       
       String id = context.uniqueId();
       
-      context.publishEvent(bankAccount, new AccountOpenedEvent(
+      context.applyEvent(bankAccount, new AccountOpenedEvent(
           id, context.strArg("name"), context.doubleArg("balance")));
       
       return id;
@@ -76,7 +76,7 @@ public class FinalBankAccountHandler extends DomainHandler<FinalBankAccount>{
         throw new IllegalStateException("单笔交易额超上限。");
       }
       
-      context.publishEvent(bankAccount, new TransferedInEvent(amount));
+      context.applyEvent(bankAccount, new TransferedInEvent(amount));
       
       System.out.println("----------------------------------------");
       
@@ -99,7 +99,7 @@ public class FinalBankAccountHandler extends DomainHandler<FinalBankAccount>{
         throw new BalanceNotEnoughException("账户余额不足");
       }
       
-      context.publishEvent(bankAccount, new TransferedOutEvent(amount));
+      context.applyEvent(bankAccount, new TransferedOutEvent(amount));
       
     }).onReplay(TransferedOutEvent.class, (bankAccount, event)-> {
       
@@ -116,7 +116,7 @@ public class FinalBankAccountHandler extends DomainHandler<FinalBankAccount>{
       
       Double amount = context.doubleArg("amount");
       
-      context.publishEvent(bankAccount, new TransferOutRolledbackEvent(amount));
+      context.applyEvent(bankAccount, new TransferOutRolledbackEvent(amount));
       
     }).onReplay(TransferOutRolledbackEvent.class, (bankAccount, event)-> {
       
