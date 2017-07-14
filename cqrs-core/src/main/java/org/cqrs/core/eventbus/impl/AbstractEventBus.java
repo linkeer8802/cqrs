@@ -113,6 +113,8 @@ public abstract class AbstractEventBus implements EventBus {
         try {
             registry.handle(message);
             
+            interceptors.stream().forEach(interceptor -> interceptor.onSuccess(message));
+            
           } catch (Exception e) {
             
             if (message instanceof ReplyableMessage) {
@@ -121,8 +123,6 @@ public abstract class AbstractEventBus implements EventBus {
             
             interceptors.stream().forEach(interceptor -> interceptor.onError(message, e));
           }
-        
-        interceptors.stream().forEach(interceptor -> interceptor.onSuccess(message));
         
       } else {
         logger.warn("No registry for message address={}", message.getAddress());
