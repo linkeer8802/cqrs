@@ -16,9 +16,9 @@
 package org.cqrs.example;
 
 import org.cqrs.core.CQRS;
-import org.cqrs.example.domain.FinalBankAccount;
+import org.cqrs.example.domain.BankAccount;
+import org.cqrs.example.handler.BankAccountHandler;
 import org.cqrs.example.handler.BankAccountHandler.BankAccountCmd;
-import org.cqrs.example.handler.FinalBankAccountHandler;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -27,7 +27,7 @@ public class BankAccountTest {
   public static void main(String[] args) throws InterruptedException {
     
     CQRS cqrs = CQRS.get();
-    new FinalBankAccountHandler(FinalBankAccount.class);
+    new BankAccountHandler(BankAccount.class);
     
     String id = cqrs.execute(BankAccountCmd.OPEN_ACCOUNT, ImmutableMap.of("name", "wrd", "balance", 100.00));
     
@@ -40,7 +40,7 @@ public class BankAccountTest {
     
     System.out.println("========================================");
     
-    System.out.println(cqrs.domain(FinalBankAccount.class).aggregateRoot(id));
+    System.out.println(cqrs.domain(BankAccount.class).aggregateRoot(id));
     
     cqrs.shutdown();
   }
