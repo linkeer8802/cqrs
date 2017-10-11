@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.cqrs.core.CQRS;
 import org.cqrs.core.Component;
 import org.cqrs.core.eventbus.EventBus;
 import org.cqrs.core.eventbus.Message;
@@ -77,7 +78,7 @@ public class DisruptorEventBusImpl extends AbstractEventBus implements Component
   
   public <T> T execute(String address, Object message) {
     try {
-      return execute(address, message, 5L);
+      return execute(address, message, CQRS.get().getConfiguration().getLongValue("eventbus.execute.max.time"));
     } catch (TimeoutException e) {
       throw new IllegalStateException(e);
     }

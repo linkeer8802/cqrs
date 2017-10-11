@@ -32,6 +32,7 @@ import org.cqrs.core.eventstore.LambdaEventSourcingRepository;
 import org.cqrs.core.journals.EventsJournalsMessageInterceptor;
 import org.cqrs.core.journals.InMemoryJournalsStorage;
 import org.cqrs.core.journals.JournalsStorage;
+import org.cqrs.util.PropertiesCfg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +42,14 @@ import org.slf4j.LoggerFactory;
 public class CQRS {
 
   public static final int DEFAULT_BUFFER_SIZE = 1024;
+  public static final String CONF_FILE = "cqrs.properties";
   
   static final Logger logger = LoggerFactory.getLogger(CQRS.class);
   
   private static CQRS instance = new CQRS();
+  
+  private PropertiesCfg configuration;
+  
   private volatile Boolean started;
   private ComponentManager componentManager;
   
@@ -73,6 +78,8 @@ public class CQRS {
   
   public CQRS startup() {
     
+    configuration = PropertiesCfg.load(CONF_FILE);
+    
     if (!started) {
       started = true;
       
@@ -85,6 +92,10 @@ public class CQRS {
     }
     
     return this;
+  }
+  
+  public PropertiesCfg getConfiguration() {
+    return configuration;
   }
 
   private void init() {

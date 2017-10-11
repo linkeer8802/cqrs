@@ -44,7 +44,7 @@ public class BankAccountTransferTest {
         ImmutableMap.of(
             "sourceId", sourceId, 
             "targetId", targetId, 
-            "amount", 500.00, 
+            "amount", 300.00, 
             "transferDateTime", 
             new Date()));
     

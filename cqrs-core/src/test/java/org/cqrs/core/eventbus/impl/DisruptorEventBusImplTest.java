@@ -16,6 +16,7 @@
 package org.cqrs.core.eventbus.impl;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -41,6 +42,29 @@ public class DisruptorEventBusImplTest {
 
   @After
   public void tearDown() throws Exception {
+    ((DisruptorEventBusImpl)eventBus).shutdown();
+  }
+  
+  public static void main(String[] args) throws Exception {
+    
+    EventBus eventBus = DisruptorEventBusImpl.startNew(Executors.newCachedThreadPool(), 2048);
+//    EventBus eventBus = new SimpleEventBusImpl();
+    
+    String address = "test";
+    
+//    eventBus.subscribe(address, message -> {System.out.println(message.getBody());});
+//    eventBus.send(address, "aaaaaaaaaaaaaaa");
+    
+    eventBus.subscribe(address, message -> {
+//      throw new RuntimeException("error~~~~");
+      System.out.println(message.getBody());
+      ((ReplyableMessage<?>)message).reply("ccccccf");
+    });
+//    String r = eventBus.send(address, "bbbb", new CompletableFuture<String>()).get();
+    
+    String r = eventBus.execute(address, "aaaa");
+    System.out.println(r);
+    
     ((DisruptorEventBusImpl)eventBus).shutdown();
   }
 

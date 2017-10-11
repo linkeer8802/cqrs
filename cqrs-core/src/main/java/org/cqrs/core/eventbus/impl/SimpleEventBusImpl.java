@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.cqrs.core.CQRS;
 import org.cqrs.core.eventbus.Message;
 
 /**
@@ -40,7 +41,8 @@ public class SimpleEventBusImpl extends AbstractEventBus {
     send(address, command, future);
     
     try {
-      T result = future.get(5L, TimeUnit.SECONDS);
+      T result = future.get(CQRS.get().getConfiguration()
+          .getLongValue("eventbus.execute.max.time"), TimeUnit.MILLISECONDS);
       if (result instanceof Throwable) {
         throw new IllegalStateException((Throwable)result);
       } else {

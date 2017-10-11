@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import org.cqrs.core.CQRS;
 import org.cqrs.core.DomainEvent;
 import org.cqrs.core.EventSourcingAggregateRoot;
 import org.cqrs.util.JdbcUtil;
@@ -19,7 +20,10 @@ public class JdbcEventStorage extends EventStorage<String> {
   static final Logger logger = LoggerFactory.getLogger(JdbcEventStorage.class);
   
   public PreparedStatement getStatement(String sql) throws SQLException {
-    Connection connection = JdbcUtil.getConnection("jdbc:mysql://192.168.1.49:3306/cqrs?useUnicode=true", "pzedu_db_rw", "#V4@spSA^mm5");
+    Connection connection = JdbcUtil.getConnection(
+        CQRS.get().getConfiguration().get("storage.jdbc.url"), 
+        CQRS.get().getConfiguration().get("storage.jdbc.username"), 
+        CQRS.get().getConfiguration().get("storage.jdbc.password"));
     return connection.prepareStatement(sql);
   }
   
